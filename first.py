@@ -1,6 +1,7 @@
 import os
 import sys
 import pygame
+import random
 from math import sqrt
 import pygame_menu
 
@@ -38,7 +39,7 @@ def leveling(live, nam):
     # Создание карабля
     space_ship = pygame.sprite.Group()
     bomb1_image = load_image("ufo_model.png", -1)
-    bomb1_image = pygame.transform.scale(bomb1_image, (70, 35))
+    bomb1_image = pygame.transform.scale(bomb1_image, (70, 50))
 
     bomb1 = pygame.sprite.Sprite(space_ship)
     all_sprites = pygame.sprite.Group()
@@ -119,6 +120,16 @@ def leveling(live, nam):
     if len(lines) != 0:
         for i in lines:
             bo.append(i)
+    star = load_image("ri.jpg", -1)
+    star = pygame.transform.scale(star, (2, 2))
+
+    stars = pygame.sprite.Group()
+    for i in range(10 * 100):
+        star1 = pygame.sprite.Sprite(stars)
+        star1.image = star
+        star1.rect = star1.image.get_rect()
+        star1.rect.x = random.choice(range(1000))
+        star1.rect.y = random.choice(range(20 * 100))
 
     # Класс остероидов
     class Asteroid:
@@ -178,6 +189,7 @@ def leveling(live, nam):
 
                         meteor1.rect.x = z * 100
                         meteor1.rect.y = j * 100
+                        print(z * 100, j * 100)
 
         # настройка внешнего вида
         def set_view(self, left1, top, cell_size):
@@ -214,7 +226,7 @@ def leveling(live, nam):
 
     # Класс пуль
     class Bullet(pygame.sprite.Sprite):
-        image = load_image("g11.jpg", 1)
+        image = load_image("bullet.png", -1)
 
         image = pygame.transform.scale(image, (10, 10))
 
@@ -240,7 +252,8 @@ def leveling(live, nam):
             cos = (-y_cord + ny) / sqrt((x_cord - nx) ** 2 + (y_cord - ny) ** 2)
 
             # перемешение по икс и игрик
-            self.nx, self.ny = round(sin * 10.0), round(cos * 10.0)
+            self.nx = round(sin * 10.0) + random.choice(range(-1, 1))
+            self.ny = round(cos * 10.0) + random.choice(range(-1, 1))
             self.pr = 0
 
         def update(self):
@@ -276,7 +289,7 @@ def leveling(live, nam):
     shoot = 0
     Asteroid(100, 100, bo, aster)
     ter = True
-    killed = 0
+    killed_aster = 0
 
     pausing = False
 
@@ -346,7 +359,12 @@ def leveling(live, nam):
             for i in aster_gold:
                 if not i or pygame.sprite.spritecollideany(i, bul, collided=None):
                     aster_gold.remove(i)
-                    killed += 1
+                    killed_aster += 1
+
+            for i in stars:
+                i.rect.x -= 2
+                if i.rect.x < 0:
+                    i.rect.x += 1000
 
             # стельба по зажиму
             if not clip:
@@ -404,11 +422,15 @@ def leveling(live, nam):
                 ter = True
             for i in aster_gold:
                 i.rect.x -= 2
+            for i in winner:
+                i.rect.x -= 2
             if pygame.sprite.spritecollideany(bomb1, winner, collided=None) and not ne_damage:
                 job = False
                 ter = False
 
             # отрисовка
+
+            stars.draw(screen)
             aster.draw(screen)
             winner.draw(screen)
             bul.draw(screen)
@@ -441,7 +463,7 @@ def leveling(live, nam):
             screen.fill(pygame.Color('black'))
             clock.tick(100)
     result = open('score.txt', 'a')
-    result.write(nam + ' - ' + str(killed) + ' - ' + str(not ter) + '\n')
+    result.write(nam + ' - ' + str(killed_aster) + ' - ' + str(not ter) + '\n')
     result.close()
     if ter:
         menu1 = pygame_menu.Menu('', 1000, 1000, theme=pygame_menu.themes.THEME_DARK)
