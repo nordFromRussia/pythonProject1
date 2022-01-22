@@ -6,6 +6,7 @@ from random import randint, choice
 # Изображение не получится загрузить
 # без предварительной инициализации pygame
 pygame.init()
+pygame.mixer.init()
 size = WIDTH, HEIGHT = 1000, 1000
 screen = pygame.display.set_mode(size)
 
@@ -241,6 +242,11 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
     running = True
     pause = False
 
+    # Музыка
+    pygame.mixer.music.load("data/music.mp3")
+    pygame.mixer.music.play(10)
+    pygame.mixer.music.set_volume(50)
+
     # Игрок
     player = Player(WIDTH // 2, HEIGHT // 2)
     pygame.mouse.set_visible(False)
@@ -323,7 +329,7 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
             for meteor in warning:
                 if pygame.sprite.collide_mask(player, meteor) and immune == 0:
                     hp_changer(-1)
-                    immune = 155  # Время на передышку
+                    immune = 120  # Время на передышку
                     AnimatedSprite(*player.rect.center, *damage_frames)
 
         # Отрисовка
@@ -344,7 +350,7 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
             screen.blit(textures["hpbar"], (0, 0))
             screen.blit(pygame.font.SysFont('None', 80).render(name, True, (0, 191, 255)), (0, 0))
             for i in range(hp):
-                pygame.draw.line(screen, pygame.Color('white'),
+                pygame.draw.line(screen, pygame.Color(255, 255, 255),
                                  (35 * (i + 2) + 15, 70),
                                  (35 * (i + 3), 70), width=20)
             if k % 2 == 0:
