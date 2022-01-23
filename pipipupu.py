@@ -10,14 +10,21 @@ pygame.mixer.init()
 size = WIDTH, HEIGHT = 1000, 1000
 screen = pygame.display.set_mode(size)
 
+# Меню/пауза
+menu = pygame.Surface(screen.get_size())
+menu.fill(pygame.Color("black"))
+menu_slp = pygame.Surface(screen.get_size())
+menu_slp.fill((100, 100, 100))
+pygame.Surface.set_alpha(menu_slp, 100)
+
 # Задержка времени
-FPS = 80
+FPS = 80  # [80]
 clock = pygame.time.Clock()
 
-met_size = 40
+met_size = 40  # [40]
 points = 0  # Очки
-hp = 3  # Жизни
-planet_time = 100  # В милисекундах
+hp = 3  # Жизни [3]
+planet_time = 100  # В милисекундах [100]
 
 # Группы спрайтов
 all_sprites = pygame.sprite.Group()
@@ -100,35 +107,36 @@ class Stars(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(x, y)
 
     def update(self):
-        self.rect.y += randint(-1, 1)
-        self.rect.x += randint(-1, 1) if self.rect.y == 0 else 0
+        y = randint(-1, 1)
+        self.rect.y += y
+        self.rect.x += randint(-1, 1) if y == 0 else 0
 
 
 class Planet(pygame.sprite.Sprite):
     def __init__(self, time):
         super().__init__(planet_group)
-        self.base_image = textures["planet"]
-        pygame.transform.scale(self.base_image, (WIDTH, HEIGHT))
-        pygame.Surface.set_alpha(self.base_image, 200)
-        self.rect = pygame.Rect(0, -self.base_image.get_height(), self.base_image.get_width(),
-                                self.base_image.get_height())
-        self.image = self.base_image
+        self.image = textures["planet"]
+        pygame.transform.scale(self.image, (WIDTH, HEIGHT))
+        pygame.Surface.set_alpha(self.image, 200)
+        self.rect = pygame.Rect(0, -self.image.get_height(), self.image.get_width(),
+                                self.image.get_height())
+        self.base_image = self.image
         self.time = time
         self.iter = 0
-        self.mask = pygame.mask.from_surface(self.base_image)
+        self.y = self.rect.y
 
     def update(self, time_k):
-        self.rect.y += 1
+        self.y += 1
         if time_k > self.time:
             # Обновление каждые [0.2] секунды (1/0.2 = 5 раз в секунду)
             self.time += 0.2
             self.iter += 1
             # Вращение планеты на [0.4] градуса (0.4 * 5 = 2 градуса в секунду)
-            angle = self.iter * 0.4
+            angle = round(self.iter * 0.4, 1)
             self.image = pygame.transform.rotate(self.base_image, angle)
             # "Пружинный механизм" для равномерного движения планеты
-            self.rect.x = -angle * 2
-            print(self.rect.x, angle)
+            self.rect = self.image.get_rect(center=self.base_image.get_rect().center)
+            self.rect.y += self.y
 
 
 # Инициализация и обновление самого персонажа
@@ -264,11 +272,32 @@ def create_fon():
         Stars(randint(0, WIDTH), randint(0, HEIGHT))
 
 
+def pause_menu(which):
+    global menu
+    menu.blit(screen, (0, 0))
+    menu.blit(menu_slp, (0, 0))
+    font = pygame.font.SysFont("None", 40)
+    text_x, text_y = WIDTH // 9 * 2, HEIGHT // 9 * 3
+    if which == "pause":
+        text = ["Пауза",
+                "Чтобы продолжить игру, нажмите Esc", "",
+                "Приятного чаепития!"]
+        for line in text:
+            if line == text[0]:
+                menu.blit(pygame.font.SysFont("None", 60).render(line, True, (180, 60, 60)),
+                          (WIDTH // 9 * 3.5, text_y))
+            else:
+                menu.blit(font.render(line, True, (180, 60, 60)), (text_x, text_y))
+            text_y += 40
+    else:
+        pass
+
+
 # Основная функция
 def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
-    global points, hp
+    global points, hp, FPS
     name, points, hp = name, p, h
-    pygame.display.set_caption('Выживи')
+    pygame.display.set_caption('Сверхзвуковой режим')
     running = True
     pause = False
 
@@ -297,11 +326,11 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
 
     # Появление метеоритов
     k = 0
-    n = 16  # Каждый n кадр
-    count = 4  # Метеоритов за раз
+    n = 16  # Каждый n кадр [16]
+    count = 4  # Метеоритов за раз [4]
 
     time_now = pygame.time.get_ticks() // 100
-    false_time, last_time = time_now, time_now
+    false_time, last_time = 0, 0
 
     # Основной цикл
     while running:
@@ -330,6 +359,7 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
                         cursor_gone = True
                         pygame.mouse.set_visible(True)
                         last_time = time_now
+                        pause_menu("pause")
                     else:
                         pause = False
                         pygame.mouse.set_visible(False)
@@ -404,8 +434,10 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
             bullets_group.draw(screen)
             player_group.draw(screen)
             anime_group.draw(screen)
+        else:
+            screen.blit(menu, (0, 0))
 
-            pygame.display.flip()
+        pygame.display.flip()
         clock.tick(FPS)
     last_time = time_now - false_time
     pygame.quit()
@@ -413,4 +445,4 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
 
 
 if __name__ == '__main__':
-    print(main(time=0))
+    print(main(time=300))  # В милисекундах
