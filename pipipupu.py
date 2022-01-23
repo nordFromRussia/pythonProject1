@@ -17,6 +17,7 @@ clock = pygame.time.Clock()
 met_size = 40
 points = 0  # Очки
 hp = 3  # Жизни
+planet_time = 100  # В милисекундах
 
 # Группы спрайтов
 all_sprites = pygame.sprite.Group()
@@ -28,6 +29,7 @@ bullets_group = pygame.sprite.Group()
 borders = pygame.sprite.Group()
 anime_group = pygame.sprite.Group()
 fon_group = pygame.sprite.Group()
+planet_group = pygame.sprite.Group()
 
 
 # Загрузка изображений
@@ -85,7 +87,8 @@ textures = {
     "ufo2": load_image("ufo_model_up1.png", -1),
     "bonus": load_image("moon.png", -1),
     "bullet": bul_frames[0][0],
-    "hpbar": load_image("Без имени-2.png")
+    "hpbar": load_image("Без имени-2.png"),
+    "planet": load_image("planeta.png")
 }
 
 
@@ -99,6 +102,33 @@ class Stars(pygame.sprite.Sprite):
     def update(self):
         self.rect.y += randint(-1, 1)
         self.rect.x += randint(-1, 1) if self.rect.y == 0 else 0
+
+
+class Planet(pygame.sprite.Sprite):
+    def __init__(self, time):
+        super().__init__(planet_group)
+        self.base_image = textures["planet"]
+        pygame.transform.scale(self.base_image, (WIDTH, HEIGHT))
+        pygame.Surface.set_alpha(self.base_image, 200)
+        self.rect = pygame.Rect(0, -self.base_image.get_height(), self.base_image.get_width(),
+                                self.base_image.get_height())
+        self.image = self.base_image
+        self.time = time
+        self.iter = 0
+        self.mask = pygame.mask.from_surface(self.base_image)
+
+    def update(self, time_k):
+        self.rect.y += 1
+        if time_k > self.time:
+            # Обновление каждые [0.2] секунды (1/0.2 = 5 раз в секунду)
+            self.time += 0.2
+            self.iter += 1
+            # Вращение планеты на [0.4] градуса (0.4 * 5 = 2 градуса в секунду)
+            angle = self.iter * 0.4
+            self.image = pygame.transform.rotate(self.base_image, angle)
+            # "Пружинный механизм" для равномерного движения планеты
+            self.rect.x = -angle * 2
+            print(self.rect.x, angle)
 
 
 # Инициализация и обновление самого персонажа
@@ -235,7 +265,7 @@ def create_fon():
 
 
 # Основная функция
-def main(name="NiGoDa", p=0, h=3, time=-1):
+def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
     global points, hp
     name, points, hp = name, p, h
     pygame.display.set_caption('Выживи')
@@ -270,10 +300,12 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
     n = 16  # Каждый n кадр
     count = 4  # Метеоритов за раз
 
-    false_time, last_time = 0, 0
+    time_now = pygame.time.get_ticks() // 100
+    false_time, last_time = time_now, time_now
 
     # Основной цикл
     while running:
+        time_now = pygame.time.get_ticks() // 100
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -297,14 +329,17 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
                         pause = True
                         cursor_gone = True
                         pygame.mouse.set_visible(True)
-                        last_time = pygame.time.get_ticks() // 1000
+                        last_time = time_now
                     else:
                         pause = False
                         pygame.mouse.set_visible(False)
-                        false_time += pygame.time.get_ticks() // 1000 - last_time
+                        false_time += time_now - last_time
+
+        if time_now - false_time == time and len(planet_group) == 0:
+            Planet(time)
 
         # Коммит = режим бога
-        if hp == 0 or pygame.time.get_ticks() // 1000 - false_time == time:
+        if hp == 0 or time_now - false_time == time + planet_time:
             break
 
         if holdup == 0 and bul:
@@ -316,7 +351,7 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
         pygame.sprite.groupcollide(meteors_group, borders, True, False)
 
         # Метеориты
-        if k == n:
+        if k == n and len(planet_group) == 0:
             k = 0
             spawn_meteors(count)
 
@@ -333,6 +368,7 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
                     AnimatedSprite(*player.rect.center, *damage_frames)
 
         # Отрисовка
+        # Нажата ли пауза
         if not pause:
             screen.fill(pygame.Color("black"))
             fon_group.draw(screen)
@@ -349,6 +385,9 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
             # Интерфейс
             screen.blit(textures["hpbar"], (0, 0))
             screen.blit(pygame.font.SysFont('None', 80).render(name, True, (0, 191, 255)), (0, 0))
+            screen.blit(pygame.font.SysFont('None', 40).render(
+                f"Время: {round((time_now - false_time) / 10)}", True, (100, 191, 255)),
+                (0, 90))
             for i in range(hp):
                 pygame.draw.line(screen, pygame.Color(255, 255, 255),
                                  (35 * (i + 2) + 15, 70),
@@ -356,9 +395,11 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
             if k % 2 == 0:
                 anime_group.update()
                 fon_group.update()
+                planet_group.update(time_now - false_time)
                 player.image = textures["ufo1"] if player.image == textures["ufo2"] else\
                     textures["ufo2"]
             all_sprites.update()
+            planet_group.draw(screen)
             meteors_group.draw(screen)
             bullets_group.draw(screen)
             player_group.draw(screen)
@@ -366,9 +407,10 @@ def main(name="NiGoDa", p=0, h=3, time=-1):
 
             pygame.display.flip()
         clock.tick(FPS)
+    last_time = time_now - false_time
     pygame.quit()
-    return name, points
+    return name, points, hp, last_time == time + planet_time
 
 
 if __name__ == '__main__':
-    print(main())
+    print(main(time=0))
