@@ -59,7 +59,7 @@ def leveling(live, nam):
     bomb1.rect.y = 420
 
     space_ship1 = pygame.sprite.Group()
-    bomb1_image = load_image("Без имени-2.png")
+    bomb1_image = load_image("hpbar.png")
 
     bombs1 = pygame.sprite.Sprite(space_ship1)
 
@@ -416,7 +416,7 @@ def leveling(live, nam):
             # столкновение
             if pygame.sprite.spritecollideany(bomb1, aster,
                                               collided=None) and not ne_damage:
-                AnimatedSprite(load_image("2.png"), 8, 6, bomb.rect.x + 30, bomb.rect.y + 10)
+                AnimatedSprite(load_image("boom.png"), 8, 6, bomb.rect.x + 30, bomb.rect.y + 10)
                 live -= 1
                 ne_damage = True
                 time_damage = 0
