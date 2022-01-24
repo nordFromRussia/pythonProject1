@@ -3,7 +3,6 @@ import sys
 import pygame
 import random
 from math import sqrt
-import pygame_menu
 
 pygame.init()
 size = width, height = 1000, 1000
@@ -11,7 +10,7 @@ screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 aster_gold = pygame.sprite.Group()
 
-pygame.mixer.music.load('mu.mp3')
+pygame.mixer.music.load('data/mu.mp3')
 pygame.mixer.music.play(-1, 0.0, 0)
 
 # Загрузка изображения
@@ -38,7 +37,17 @@ def load_image(name, color_key=None):
 def leveling(live, nam):
     # Создание карабля
     space_ship = pygame.sprite.Group()
-    bomb1_image = load_image("ufo_model.png", -1)
+    if nam == 'pepe':
+        nazvanie = 'pepecopter.jpg'
+        nazvanie1 = 'pepecopter1.jpg'
+        nazvanieup = 'pepecopter.jpg'
+        nazvaniedoun = 'pepecopter.jpg'
+    else:
+        nazvanie = 'ufo_model.png'
+        nazvanie1 = 'ufo_model1.png'
+        nazvanieup = 'ufo_model_U.png'
+        nazvaniedoun = 'ufo_model_D.png'
+    bomb1_image = load_image(nazvanie, -1)
     bomb1_image = pygame.transform.scale(bomb1_image, (70, 50))
 
     bomb1 = pygame.sprite.Sprite(space_ship)
@@ -63,20 +72,20 @@ def leveling(live, nam):
 
     # Все состояния карабля
 
-    bomb_image = load_image("ufo_model.png", -1)
+    bomb_image = load_image(nazvanie, -1)
     bomb_image = pygame.transform.scale(bomb_image, (70, 50))
 
-    bomb_image1 = load_image("ufo_model1.png", -1)
+    bomb_image1 = load_image(nazvanie1, -1)
     bomb_image1 = pygame.transform.scale(bomb_image1, (70, 50))
 
     # карабль летит вверх
 
-    bomb_up = load_image("ufo_model_U.png", -1)
+    bomb_up = load_image(nazvanieup, -1)
     bomb_up = pygame.transform.scale(bomb_up, (70, 50))
 
     # карабль летит вниз
 
-    bomb_down = load_image("ufo_model_D.png", -1)
+    bomb_down = load_image(nazvaniedoun, -1)
     bomb_down = pygame.transform.scale(bomb_down, (70, 50))
 
     bomb = pygame.sprite.Sprite(space_ship)
@@ -226,7 +235,7 @@ def leveling(live, nam):
 
     # Класс пуль
     class Bullet(pygame.sprite.Sprite):
-        image = load_image("bullet.png", -1)
+        image = load_image("bul.png", -1)
 
         image = pygame.transform.scale(image, (10, 10))
 
@@ -342,6 +351,7 @@ def leveling(live, nam):
             for i in bul:
                 if i.update() == -1 or pygame.sprite.spritecollideany(i, aster, collided=None):
                     bul.remove(i)
+
             if bomb.image == bomb_image:
                 bomb.image = bomb_image1
             else:
@@ -352,15 +362,18 @@ def leveling(live, nam):
                 g.rect.x -= 2
                 g.rect.y -= 0
 
+            # перемещение хитбоксов
             for g in fon_asteroid:
                 g.rect.x -= 2
                 g.rect.y -= 0
 
+            # перемещение золотых астероидов
             for i in aster_gold:
                 if not i or pygame.sprite.spritecollideany(i, bul, collided=None):
                     aster_gold.remove(i)
                     killed_aster += 1
 
+            # перемещение звезд на фоне
             for i in stars:
                 i.rect.x -= 2
                 if i.rect.x < 0:
@@ -407,8 +420,12 @@ def leveling(live, nam):
                 live -= 1
                 ne_damage = True
                 time_damage = 0
+
+            # 1,5 секунд неуязвимости
             if ne_damage:
                 time_damage += 1
+
+            # взрыв
             if time_damage < 48:
                 all_sprites.update()
 
@@ -420,10 +437,13 @@ def leveling(live, nam):
             if live <= 0:
                 job = False
                 ter = True
+
             for i in aster_gold:
                 i.rect.x -= 2
+
             for i in winner:
                 i.rect.x -= 2
+
             if pygame.sprite.spritecollideany(bomb1, winner, collided=None) and not ne_damage:
                 job = False
                 ter = False
@@ -455,6 +475,7 @@ def leveling(live, nam):
             screen.fill(pygame.Color('black'))
             clock.tick(100)
         else:
+            # пауза
             my_font = pygame.font.SysFont('None', 80)
             player_name = my_font.render('Pause, press Esc to continue', True, (100, 100, 100))
             screen.blit(player_name, (110, 400))
@@ -462,46 +483,8 @@ def leveling(live, nam):
 
             screen.fill(pygame.Color('black'))
             clock.tick(100)
+    # запись результатов
     result = open('score.txt', 'a')
     result.write(nam + ' - ' + str(killed_aster) + ' - ' + str(not ter) + '\n')
     result.close()
-    if ter:
-        menu1 = pygame_menu.Menu('', 1000, 1000, theme=pygame_menu.themes.THEME_DARK)
-
-        menu1.add.label('Game over')
-
-        menu1.add.button('Выход в меню', menu_fun)
-
-        menu1.mainloop(screen)
-    else:
-        menu1 = pygame_menu.Menu('', 1000, 1000,
-                                 theme=pygame_menu.themes.THEME_DARK)
-
-        menu1.add.label('Вы выйграли')
-
-        menu1.add.button('Выход в меню', menu_fun)
-
-        menu1.mainloop(screen)
-
-
-def menu_fun():
-    menu = pygame_menu.Menu('Космо курьер', 1000, 1000, theme=pygame_menu.themes.THEME_DARK)
-
-    name_field = menu.add.text_input('Имя:', default='Model: B № 2')
-
-    selecting = menu.add.selector('Сложность:', [('Сложный', 1), ('Средний', 2), ('Лёгкий', 3)],
-                                  selector_id='difficult')
-
-    def start_the_game():
-        selected_item = selecting.get_value()
-        selected_item1 = name_field.get_value()
-        leveling(selected_item[0][1], selected_item1)
-
-    menu.add.button('Играть', start_the_game)
-
-    menu.add.button('Выход', pygame_menu.events.EXIT)
-
-    menu.mainloop(screen)
-
-
-menu_fun()
+    return nam, str(killed_aster), str(not ter)

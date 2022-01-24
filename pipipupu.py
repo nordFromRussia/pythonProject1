@@ -10,6 +10,13 @@ pygame.mixer.init()
 size = WIDTH, HEIGHT = 1000, 1000
 screen = pygame.display.set_mode(size)
 
+# Меню/пауза
+menu = pygame.Surface(screen.get_size())
+menu.fill(pygame.Color("black"))
+menu_slp = pygame.Surface(screen.get_size())
+pygame.Surface.set_alpha(menu_slp, 100)
+menu_slp.fill((100, 100, 100))
+
 # Задержка времени
 FPS = 80  # [80]
 clock = pygame.time.Clock()
@@ -78,6 +85,8 @@ class AnimatedSprite(pygame.sprite.Sprite):
 
 
 # Внешний вид
+pygame.display.set_icon(load_image("my_icon.png"))
+pygame.display.set_gamma(255, 255, 255)
 bul_frames = cut_sheet(load_image("bullet.png"), 4, 4, 30, 30)
 damage_frames = cut_sheet(load_image("2.png"), 8, 6, 30, 30)
 textures = {
@@ -87,7 +96,7 @@ textures = {
     "ufo2": load_image("ufo_model_up1.png", -1),
     "bonus": load_image("moon.png", -1),
     "bullet": bul_frames[0][0],
-    "hpbar": load_image("Без имени-2.png"),
+    "hpbar": load_image("Без имени-2.png", -1),
     "planet": load_image("planeta.png")
 }
 
@@ -215,7 +224,7 @@ class Meteors(pygame.sprite.Sprite):
         self.shots -= 1
 
 
-def spawn_meteors(count):
+def spawn_meteors(count, sl):
     # Выбор начальной точки и направления
     for _ in range(count):
         where = choice(("side", "up"))
@@ -231,7 +240,7 @@ def spawn_meteors(count):
             turn_x = -turn_x if x > WIDTH // 2 else turn_x
 
         # Создание метеоритов с разными шансами для простых и для бонусных
-        Meteors(x, y, turn_x, turn_y, choice((*[1] * 18, *[2] * 1, *[3] * 1)))
+        Meteors(x, y, turn_x, turn_y, choice((*[1] * 18, *[2] * (2 - sl), *[3] * 1)))
 
 
 def hit_meteors(hits):
@@ -265,10 +274,74 @@ def create_fon():
         Stars(randint(0, WIDTH), randint(0, HEIGHT))
 
 
+def pause_menu(which, sl):
+    global menu
+    font = pygame.font.SysFont("None", 40)
+    menu.fill(pygame.Color("black"))
+    if sl == 0:
+        menu_slp.fill((150, 100, 100))
+    elif sl == 1:
+        menu_slp.fill((100, 100, 100))
+    else:
+        menu_slp.fill((100, 150, 100))
+    if which == "pause":
+        menu.blit(screen, (0, 0))
+        menu.blit(menu_slp, (0, 0))
+        text = ["Пауза", "",
+                "Приятного чаепития!",
+                "Чтобы продолжить игру, нажмите Esc", "",
+                "Подсказка: Стрелять прокликом - быстрее!"]
+    else:
+        text = ["Меню", "",
+                "Управление:",
+                "Стрельба: WASD или стрелочки",
+                "Движение: Мышка", "",
+                "Чтобы начать - нажми пробел",
+                "Чтобы выйти - нажми Esc",
+                'Чтобы ввести имя - нажми на "Имя"',
+                "Чтобы сохранить имя - нажми пробел",
+                "Ради сохранности ваших ушей музыка будет только после первого запуска"]
+
+        law = ["По всей галактике бушует война. Две крупнейшие торговые гильдии ведут борьбу за"
+               " власть и области влияния.", "Гильдии поменьше решили воспользоваться отвлечённостью"
+               " гигантов и захватить власть на их территориях.", "Глава одной из гильдий,"
+               " прознав об этой подлости, решил объединиться со своим старым соперником для того,",
+               "чтобы раздавить неугодных. Вы выбраны послом этой гильдии. Доставьте мирный"
+               " договор.",
+               "Все метеориты наносят урон.", "За ассимиляцию жёлтых ты получаешь очки.",
+               "Если уничтожишь красный - получишь жизнь.",
+               "Бонусные метеориты имеют меньшую плотность и ломаются легче."]
+        text_x, text_y = 10, 10
+        for line in law[:4]:
+            menu.blit(pygame.font.SysFont("None", 25).render(line, True, pygame.Color("white")),
+                      (text_x, text_y))
+            text_y += 30
+        menu.blit(pygame.font.SysFont("None", 50).render(
+            "Сложность:", True, pygame.Color("gray")), (20, text_y + 20))
+        text_y = HEIGHT - 120
+        for line in law[4:]:
+            menu.blit(pygame.font.SysFont("None", 25).render(line, True, pygame.Color("white")),
+                      (text_x, text_y))
+            text_y += 30
+
+    text_x, text_y = WIDTH // 9 * 2, HEIGHT // 9 * 3
+    for line in text:
+        if line == text[0]:
+            menu.blit(pygame.font.SysFont("None", 60).render(line, True, (180, 60, 60)),
+                      (WIDTH // 9 * 3.5, text_y))
+        elif line == text[-1]:
+            menu.blit(pygame.font.SysFont("None", 25).render(line, True, (180, 60, 60)),
+                      (WIDTH // 9 * 2, text_y))
+        else:
+            menu.blit(font.render(line, True, (180, 60, 60)), (text_x, text_y))
+        text_y += 40
+
+
 # Основная функция
-def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
+def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1):
     global points, hp, FPS
-    name, points, hp = name, p, h
+    points = 0
+    name, hp = name, h
     pygame.display.set_caption('Сверхзвуковой режим')
     running = True
     pause = False
@@ -287,7 +360,7 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
     # Пули
     bul_speed = 8
     holdup = 0
-    hold = 50
+    hold = 40 + sl * 10  # Чем сложнее, тем быстрее стреляешь
     bul = False
 
     # Границы
@@ -298,11 +371,11 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
 
     # Появление метеоритов
     k = 0
-    n = 16  # Каждый n кадр [16]
+    n = 14 + sl * 2  # Каждый n кадр [16]
     count = 4  # Метеоритов за раз [4]
 
     time_now = pygame.time.get_ticks() // 100
-    false_time, last_time = 0, 0
+    last_time, false_time = 0, time_now
 
     # Основной цикл
     while running:
@@ -331,16 +404,17 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
                         cursor_gone = True
                         pygame.mouse.set_visible(True)
                         last_time = time_now
+                        pause_menu("pause", sl)
                     else:
                         pause = False
                         pygame.mouse.set_visible(False)
                         false_time += time_now - last_time
 
-        if time_now - false_time == time and len(planet_group) == 0:
+        if time_now - false_time == time and len(planet_group) == 0 and not pause:
             Planet(time)
 
         # Коммит = режим бога
-        if hp == 0 or time_now - false_time == time + planet_time:
+        if (hp == 0 or time_now - false_time == time + planet_time) and not pause:
             break
 
         if holdup == 0 and bul:
@@ -354,7 +428,7 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
         # Метеориты
         if k == n and len(planet_group) == 0:
             k = 0
-            spawn_meteors(count)
+            spawn_meteors(count, sl)
 
         # Попадание пуль по метеоритам
         hit_meteors(pygame.sprite.groupcollide(meteors_group, bullets_group, False, True))
@@ -365,7 +439,7 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
             for meteor in warning:
                 if pygame.sprite.collide_mask(player, meteor) and immune == 0:
                     hp_changer(-1)
-                    immune = 120  # Время на передышку
+                    immune = 100 + sl * 20  # Время на передышку
                     AnimatedSprite(*player.rect.center, *damage_frames)
 
         # Отрисовка
@@ -405,13 +479,97 @@ def main(name="NiGoDa", p=0, h=3, time=-1 - planet_time):
             bullets_group.draw(screen)
             player_group.draw(screen)
             anime_group.draw(screen)
+        else:
+            screen.blit(menu, (0, 0))
 
-            pygame.display.flip()
+        pygame.display.flip()
         clock.tick(FPS)
-    last_time = time_now - false_time
+    pygame.mouse.set_visible(True)
+    for sprite in (*all_sprites, *planet_group, *fon_group, *anime_group):
+        sprite.kill()
+    return points, hp, time_now - false_time == time + planet_time
+
+
+def start_end_screen():
+    n = ["NiGoDa", 3, 150, 1]  # В милисекундах [1800 = 3 минуты]
+    running = True
+    result = ()
+    t_x, t_y = WIDTH // 9, HEIGHT // 9 * 7
+    buttons = (
+        ("Лёгкая", (pygame.font.SysFont("None", 50).render("Лёгкая", True, pygame.Color("gray")),
+                    (240, 150))),
+        ("Средняя", (pygame.font.SysFont("None", 50).render("Средняя", True, pygame.Color("gray")),
+                     (380, 150))),
+        ("Сложная", (pygame.font.SysFont("None", 50).render("Сложная", True, pygame.Color("gray")),
+                     (560, 150))))
+    selected = buttons[1][1][0].get_rect(), buttons[1][1][1]
+    name_btn = pygame.font.SysFont("None", 50).render("Имя:", True, pygame.Color("gray")), (143, 230)
+    vvod = False
+    name = n[0]
+    while running:
+        pygame.display.set_caption("Меню игры, созданной для совместного проекта")
+        pause_menu("menu", n[3])
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_SPACE and not vvod:
+                    result = main(*n)
+                elif event.key == pygame.K_RETURN and vvod:
+                    vvod = False
+                    n[0] = name
+                elif vvod and event.key in range(0x110000):
+                    key = chr(event.key)
+                    if pygame.key.get_pressed()[pygame.K_LSHIFT] or\
+                            pygame.key.get_pressed()[pygame.K_RSHIFT]:
+                        key = key.upper()
+                    name += key
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                for i, but in buttons:
+                    if but[0].get_rect().move(but[1]).collidepoint(event.pos):
+                        n[3] = ("Сложная", "Средняя", "Лёгкая").index(i)
+                        selected = but[0].get_rect(), but[1]
+                if name_btn[0].get_rect().move(name_btn[1]).collidepoint(event.pos):
+                    vvod = True
+                    name = ""
+
+        if result:
+            p, heal, win = result
+            if win:
+                itog = f"{name} доставил послание и по пути заработал {p} золота,"
+                if heal == n[1]:
+                    heal = "не угробя при этом корабль."
+                elif heal < n[1]:
+                    heal = f"потеряв при этом {n[1] - heal} прочности корабля."
+                else:
+                    heal = f"мистическим образом при этом нарастив {heal - n[1]} слоёв брони."
+            else:
+                itog, heal = f"{name} не выжил. На его обломках осталось {p} золота.", ""
+            menu.blit(pygame.font.SysFont("None", 40).render(
+                itog, True, pygame.Color("orange")), (t_x, t_y))
+            menu.blit(pygame.font.SysFont("None", 40).render(
+                heal, True, pygame.Color("orange")), (t_x, t_y + 45))
+
+        for i in buttons:
+            menu.blit(*i[1])
+        menu.blit(*name_btn)
+        sel_p = pygame.Surface(selected[0].size)
+        sel_p.fill((255, 0, 0))
+        pygame.Surface.set_alpha(sel_p, 120)
+        menu.blit(sel_p, selected[1])
+        if vvod:
+            sel_p = pygame.Surface(name_btn[0].get_rect().size)
+            sel_p.fill((255, 0, 0))
+            pygame.Surface.set_alpha(sel_p, 120)
+            menu.blit(sel_p, name_btn[1])
+        menu.blit(pygame.font.SysFont("None", 50).render(name, True, pygame.Color("gray")),
+                  (225, 230))
+
+        screen.blit(menu, (0, 0))
+        pygame.display.flip()
+        clock.tick(FPS)
     pygame.quit()
-    return name, points, hp, last_time == time + planet_time
 
 
 if __name__ == '__main__':
-    print(main(time=300))  # В милисекундах
+    start_end_screen()
