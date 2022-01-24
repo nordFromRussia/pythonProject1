@@ -57,6 +57,7 @@ def load_image(name, colorkey=None):
     return image
 
 
+# Разрезка изображение на кадры
 def cut_sheet(sheet, columns, rows, sc_x, sc_y):
     frames = []
     rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
@@ -68,6 +69,7 @@ def cut_sheet(sheet, columns, rows, sc_x, sc_y):
     return frames[1:], pygame.Rect(0, 0, sc_x, sc_y)
 
 
+# Из кадров в анимацию
 class AnimatedSprite(pygame.sprite.Sprite):
     def __init__(self, x, y, frames, rect):
         super().__init__(anime_group)
@@ -100,6 +102,7 @@ textures = {
 }
 
 
+# Задний фон
 class Stars(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__(fon_group)
@@ -113,6 +116,7 @@ class Stars(pygame.sprite.Sprite):
         self.rect.x += randint(-1, 1) if y == 0 else 0
 
 
+# Планета (анимация победы)
 class Planet(pygame.sprite.Sprite):
     def __init__(self, time):
         super().__init__(planet_group)
@@ -185,6 +189,7 @@ class Border(pygame.sprite.Sprite):
             self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
 
 
+# Метеориты
 class Meteors(pygame.sprite.Sprite):
     def __init__(self, x, y, turn_x, turn_y, k):
         self.shots = 1  # Осталось выстрелов до уничтожения
@@ -251,6 +256,7 @@ def hit_meteors(hits):
         meteor.shotted()
 
 
+# Создание границ
 def create_borders():
     Border(-met_size ** 2, -met_size ** 2, WIDTH + met_size ** 2, -met_size ** 2)
     Border(-met_size ** 2, HEIGHT + met_size ** 2, WIDTH + met_size ** 2, HEIGHT + met_size ** 2)
@@ -273,6 +279,7 @@ def create_fon():
         Stars(randint(0, WIDTH), randint(0, HEIGHT))
 
 
+# Создание экранов для паузы и меню
 def pause_menu(which, sl):
     global menu
     font = pygame.font.SysFont("None", 40)
@@ -491,6 +498,7 @@ def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1):
     return points, hp, time_now - false_time == time + planet_time
 
 
+# Функция для инициализации меню
 def start_end_screen():
     eng_rus = "qwertyuiop[]asdfghjkl;'zxcvbnm,.`", "йцукенгшщзхъфывапролджэячсмитьбюё"  # 33
     rus = True
