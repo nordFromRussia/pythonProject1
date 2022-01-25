@@ -59,7 +59,7 @@ def leveling(live, nam):
     bomb1.rect.y = 420
 
     space_ship1 = pygame.sprite.Group()
-    bomb1_image = load_image("hpbar.png")
+    bomb1_image = load_image("hpbar.png", -1)
 
     bombs1 = pygame.sprite.Sprite(space_ship1)
 
@@ -123,14 +123,14 @@ def leveling(live, nam):
     winner = pygame.sprite.Group()
 
     # Игровое поле
-    lack = open('LEVEL.txt', encoding="utf8")
+    lack = open('data/LEVEL.txt', encoding="utf8")
     lines = lack.readlines()
     bo = []
     if len(lines) != 0:
         for i in lines:
             bo.append(i)
-    star = load_image("ri.jpg", -1)
-    star = pygame.transform.scale(star, (2, 2))
+    star = pygame.Surface((2, 2))
+    star.fill(pygame.Color("white"))
 
     stars = pygame.sprite.Group()
     for i in range(10 * 100):
@@ -150,7 +150,6 @@ def leveling(live, nam):
             self.board = bo1
 
             self.board = (''.join(bo)).split('\n')
-            print(self.board)
             # значения по умолчанию
             self.left = 100
             self.top = 100
@@ -189,8 +188,8 @@ def leveling(live, nam):
                         meteor1.rect.y = j * 100
                     if self.board[z][j] == 'W':
                         # спрайт выйгрыша
-                        meteor = load_image("win.png")
-                        meteor = pygame.transform.scale(meteor, (100, 100))
+                        meteor = pygame.Surface((100, 100))
+                        meteor.fill(pygame.Color("black"))
 
                         meteor1 = pygame.sprite.Sprite(winner)
                         meteor1.image = meteor
@@ -198,7 +197,6 @@ def leveling(live, nam):
 
                         meteor1.rect.x = z * 100
                         meteor1.rect.y = j * 100
-                        print(z * 100, j * 100)
 
         # настройка внешнего вида
         def set_view(self, left1, top, cell_size):
@@ -254,7 +252,6 @@ def leveling(live, nam):
 
             # кординаты мыши
             nx, ny = xy[0], xy[1]
-            print(ny)
 
             # синус и косинус
             sin = (-x_cord + nx) / sqrt((x_cord - nx) ** 2 + (y_cord - ny) ** 2)
@@ -487,4 +484,4 @@ def leveling(live, nam):
     result = open('score.txt', 'a')
     result.write(nam + ' - ' + str(killed_aster) + ' - ' + str(not ter) + '\n')
     result.close()
-    return nam, str(killed_aster), str(not ter)
+    return killed_aster, live, not ter
