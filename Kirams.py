@@ -12,6 +12,7 @@ aster_gold = pygame.sprite.Group()
 
 pygame.mixer.music.load('data/mu.mp3')
 pygame.mixer.music.play(-1, 0.0, 0)
+pygame.mixer.music.set_volume(0.1)
 
 # Загрузка изображения
 
