@@ -9,16 +9,13 @@ size = width, height = 1000, 1000
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 aster_gold = pygame.sprite.Group()
+if "data" in os.listdir():
+    os.chdir("data")
 
-pygame.mixer.music.load('data/mu.mp3')
-pygame.mixer.music.play(-1, 0.0, 0)
-pygame.mixer.music.set_volume(0.1)
 
 # Загрузка изображения
-
-
 def load_image(name, color_key=None):
-    fullname = os.path.join('data', name)
+    fullname = os.path.join(name)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
@@ -124,7 +121,8 @@ def leveling(live, nam):
     winner = pygame.sprite.Group()
 
     # Игровое поле
-    lack = open('data/LEVEL.txt', encoding="utf8")
+
+    lack = open('LEVEL.txt', encoding="utf8")
     lines = lack.readlines()
     bo = []
     if len(lines) != 0:
@@ -151,6 +149,7 @@ def leveling(live, nam):
             self.board = bo1
 
             self.board = (''.join(bo)).split('\n')
+
             # значения по умолчанию
             self.left = 100
             self.top = 100
@@ -300,6 +299,8 @@ def leveling(live, nam):
 
     pausing = False
 
+    # Основной цикл
+
     while job:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -432,6 +433,7 @@ def leveling(live, nam):
                 all_sprites = pygame.sprite.Group()
 
             # уменьшение жизни и смерть
+
             if live <= 0:
                 job = False
                 ter = True
@@ -481,8 +483,19 @@ def leveling(live, nam):
 
             screen.fill(pygame.Color('black'))
             clock.tick(100)
+
+    lack.close()
     # запись результатов
-    result = open('data/score.txt', 'a')
-    result.write(nam + ' - ' + str(killed_aster) + ' - ' + str(not ter) + '\n')
-    result.close()
     return killed_aster, live, not ter
+    # Очки, хп, прошёл ли
+
+
+def run():
+    pygame.mixer.music.load('mu.mp3')
+    pygame.mixer.music.play(-1, 0.0, 0)
+    pygame.mixer.music.set_volume(0.4)
+    leveling(3, "Model_2-B")
+
+
+if __name__ == '__main__':
+    run()
