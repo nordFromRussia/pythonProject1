@@ -9,15 +9,15 @@ size = width, height = 1000, 1000
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 aster_gold = pygame.sprite.Group()
+if "data" in os.listdir():
+    os.chdir("data")
+sound_damage = pygame.mixer.Sound("sound_damage.mp3")
+pygame.mixer.Sound.set_volume(sound_damage, 0.2)
 
-pygame.mixer.music.load('data/mu.mp3')
-pygame.mixer.music.play(-1, 0.0, 0)
 
 # Загрузка изображения
-
-
 def load_image(name, color_key=None):
-    fullname = os.path.join('data', name)
+    fullname = os.path.join(name)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
@@ -37,11 +37,11 @@ def load_image(name, color_key=None):
 def leveling(live, nam):
     # Создание карабля
     space_ship = pygame.sprite.Group()
-    if nam == 'pepe':
-        nazvanie = 'pepecopter.jpg'
-        nazvanie1 = 'pepecopter1.jpg'
-        nazvanieup = 'pepecopter.jpg'
-        nazvaniedoun = 'pepecopter.jpg'
+    if 'pepe' in nam:
+        nazvanie = 'pepecopter1.jpg'
+        nazvanie1 = 'pepecopter2.jpg'
+        nazvanieup = 'pepecopter2.jpg'
+        nazvaniedoun = 'pepecopter2.jpg'
     else:
         nazvanie = 'ufo_model.png'
         nazvanie1 = 'ufo_model1.png'
@@ -123,7 +123,8 @@ def leveling(live, nam):
     winner = pygame.sprite.Group()
 
     # Игровое поле
-    lack = open('data/LEVEL.txt', encoding="utf8")
+
+    lack = open('LEVEL.txt', encoding="utf8")
     lines = lack.readlines()
     bo = []
     if len(lines) != 0:
@@ -150,6 +151,7 @@ def leveling(live, nam):
             self.board = bo1
 
             self.board = (''.join(bo)).split('\n')
+
             # значения по умолчанию
             self.left = 100
             self.top = 100
@@ -299,6 +301,8 @@ def leveling(live, nam):
 
     pausing = False
 
+    # Основной цикл
+
     while job:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -417,6 +421,7 @@ def leveling(live, nam):
                 live -= 1
                 ne_damage = True
                 time_damage = 0
+                sound_damage.play()
 
             # 1,5 секунд неуязвимости
             if ne_damage:
@@ -446,7 +451,6 @@ def leveling(live, nam):
                 ter = False
 
             # отрисовка
-
             stars.draw(screen)
             aster.draw(screen)
             winner.draw(screen)
@@ -480,8 +484,19 @@ def leveling(live, nam):
 
             screen.fill(pygame.Color('black'))
             clock.tick(100)
+
+    lack.close()
     # запись результатов
-    result = open('score.txt', 'a')
-    result.write(nam + ' - ' + str(killed_aster) + ' - ' + str(not ter) + '\n')
-    result.close()
+    # Очки, хп, прошёл ли
     return killed_aster, live, not ter
+
+
+def run():
+    pygame.mixer.music.load('mu.mp3')
+    pygame.mixer.music.play(-1, 0.0, 0)
+    pygame.mixer.music.set_volume(0.4)
+    leveling(3, "Model_2-B")
+
+
+if __name__ == '__main__':
+    run()

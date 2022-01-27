@@ -9,6 +9,8 @@ pygame.init()
 pygame.mixer.init()
 size = WIDTH, HEIGHT = 1000, 1000
 screen = pygame.display.set_mode(size)
+if "data" in os.listdir():
+    os.chdir("data")
 
 # Меню/пауза
 menu = pygame.Surface(screen.get_size())
@@ -25,6 +27,9 @@ met_size = 40  # [40]
 points = 0  # Очки
 hp = 3  # Жизни [3]
 planet_time = 100  # В милисекундах [100]
+music = "music.mp3"
+sound_damage = pygame.mixer.Sound("sound_damage.mp3")
+pygame.mixer.Sound.set_volume(sound_damage, 0.2)
 
 # Группы спрайтов
 all_sprites = pygame.sprite.Group()
@@ -41,7 +46,7 @@ planet_group = pygame.sprite.Group()
 
 # Загрузка изображений
 def load_image(name, colorkey=None):
-    fullname = os.path.join('data', name)
+    fullname = os.path.join(name)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
@@ -95,6 +100,8 @@ textures = {
     "gold": load_image("gold.png", -1),
     "ufo1": load_image("ufo_model_up.png", -1),
     "ufo2": load_image("ufo_model_up1.png", -1),
+    "pepe1": load_image("pepecopter1.jpg", -1),
+    "pepe2": load_image("pepecopter2.jpg", -1),
     "bonus": load_image("moon.png", -1),
     "bullet": bul_frames[0][0],
     "hpbar": load_image("hpbar.png", -1),
@@ -146,9 +153,13 @@ class Planet(pygame.sprite.Sprite):
 
 # Инициализация и обновление самого персонажа
 class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, pepe):
         super().__init__(player_group, all_sprites)
-        self.image = textures["ufo1"]
+        self.images = textures["ufo1"], textures["ufo2"]
+        if pepe:
+            self.images = pygame.transform.scale(textures["pepe1"], self.images[0].get_size()),\
+                          pygame.transform.scale(textures["pepe2"], self.images[1].get_size())
+        self.image = self.images[0]
         self.rect = self.image.get_rect().move(x - self.image.get_width() // 2,
                                                y - self.image.get_height() // 2)
         self.mask = pygame.mask.from_surface(self.image)
@@ -274,6 +285,14 @@ def points_changer(g):
     points += g
 
 
+def music_changer(mus):
+    global music
+    music = mus
+    pygame.mixer.music.load(music)
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.4)
+
+
 def create_fon():
     for i in range(WIDTH * HEIGHT // 500):
         Stars(randint(0, WIDTH), randint(0, HEIGHT))
@@ -284,33 +303,31 @@ def pause_menu(which, sl):
     global menu
     font = pygame.font.SysFont("None", 40)
     if sl == 0:
-        menu_slp.fill((150, 100, 100))
-        menu.fill((10, 0, 0))
+        menu_slp.fill((110, 90, 90))
+        menu.fill((5, 0, 0))
     elif sl == 1:
         menu_slp.fill((100, 100, 100))
         menu.fill(pygame.Color("black"))
     else:
-        menu_slp.fill((100, 150, 100))
-        menu.fill((0, 10, 0))
+        menu_slp.fill((90, 110, 90))
+        menu.fill((0, 5, 0))
     if which == "pause":
         menu.blit(screen, (0, 0))
         menu.blit(menu_slp, (0, 0))
-        text = ["Пауза", "",
+        text = ("Пауза", "",
                 "Приятного чаепития!",
                 "Чтобы продолжить игру, нажмите Esc", "",
-                "Подсказка: Стрелять прокликом - быстрее!"]
-    else:
-        text = ["Меню", "",
+                "Подсказка: Стрелять прокликом - быстрее!")
+    elif which == "menu":
+        text = ("Меню", "",
                 "Управление:",
                 "Стрельба: WASD или стрелочки",
                 "Движение: Мышка", "",
                 "Чтобы начать - нажми пробел",
                 "Чтобы выйти - нажми Esc",
-                'Чтобы ввести имя - нажми на "Имя"',
-                "Чтобы сохранить имя - нажми пробел",
-                "Ради сохранности ваших ушей музыка будет только после первого запуска"]
+                "Ради сохранности ваших ушей музыка будет только после первого запуска")
 
-        law = ["По всей галактике бушует война. Две крупнейшие торговые гильдии ведут борьбу за"
+        law = ("По всей галактике бушует война. Две крупнейшие торговые гильдии ведут борьбу за"
                " власть и области влияния.", "Гильдии поменьше решили воспользоваться отвлечённостью"
                " гигантов и захватить власть на их территориях.", "Глава одной из гильдий,"
                " прознав об этой подлости, решил объединиться со своим старым соперником для того,",
@@ -318,19 +335,38 @@ def pause_menu(which, sl):
                " договор.",
                "Все метеориты наносят урон.", "За ассимиляцию жёлтых ты получаешь очки.",
                "Если уничтожишь красный - получишь жизнь.",
-               "Бонусные метеориты имеют меньшую плотность и ломаются легче."]
+               "Бонусные метеориты имеют меньшую плотность и ломаются легче.")
         text_x, text_y = 10, 10
         for line in law[:4]:
             menu.blit(pygame.font.SysFont("None", 25).render(line, True, pygame.Color("white")),
                       (text_x, text_y))
             text_y += 30
-        menu.blit(pygame.font.SysFont("None", 50).render(
-            "Сложность:", True, pygame.Color("gray")), (20, text_y + 20))
         text_y = HEIGHT - 120
         for line in law[4:]:
             menu.blit(pygame.font.SysFont("None", 25).render(line, True, pygame.Color("white")),
                       (text_x, text_y))
             text_y += 30
+    elif which == "settings":
+        menu.blit(pygame.font.SysFont("None", 50).render(
+            "Сложность:", True, pygame.Color("gray")), (20, 150))
+        menu.blit(pygame.font.SysFont("None", 50).render(
+            "Режим игры:", True, pygame.Color("gray")), (20, HEIGHT - 400))
+        menu.blit(pygame.font.SysFont("None", 50).render(
+            "Музыка:", True, pygame.Color("gray")), (75, 50))
+        text = ("Настройки", "",
+                'Чтобы ввести имя - нажми на "Имя"',
+                "Чтобы сохранить имя - нажми пробел",
+                "Чтобы выбрать музыку, она должна быть в data")
+    else:
+        text = ()
+        menu.blit(pygame.font.SysFont("None", 25).render(
+            "Результаты прошлых послов:", True, pygame.Color("white")), (20, 150))
+        law = ("Имя", "Режим", "Сложность", "Очки, прочность, долетел")
+        text_x, text_y = 10, 190
+        for i in law:
+            menu.blit(pygame.font.SysFont("None", 25).render(
+                i, True, pygame.Color("white")), (text_x, text_y))
+            text_x += WIDTH // 4
 
     text_x, text_y = WIDTH // 9 * 2, HEIGHT // 9 * 3
     for line in text:
@@ -355,12 +391,11 @@ def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1):
     pause = False
 
     # Музыка
-    pygame.mixer.music.load("data/music.mp3")
-    pygame.mixer.music.play(10)
-    pygame.mixer.music.set_volume(0.4)
+    if not pygame.mixer.music.get_busy():
+        music_changer(music)
 
     # Игрок
-    player = Player(WIDTH // 2, HEIGHT // 2)
+    player = Player(WIDTH // 2, HEIGHT // 2, "pepe" in name)
     pygame.mouse.set_visible(False)
     cursor_gone = True
     immune = 0
@@ -449,6 +484,7 @@ def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1):
                     hp_changer(-1)
                     immune = 100 + sl * 20  # Время на передышку
                     AnimatedSprite(*player.rect.center, *damage_frames)
+                    sound_damage.play()
 
         # Отрисовка
         # Нажата ли пауза
@@ -479,8 +515,8 @@ def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1):
                 anime_group.update()
                 fon_group.update()
                 planet_group.update(time_now - false_time)
-                player.image = textures["ufo1"] if player.image == textures["ufo2"] else\
-                    textures["ufo2"]
+                player.image = player.images[0] if player.image == player.images[1] else\
+                    player.images[1]
             all_sprites.update()
             planet_group.draw(screen)
             meteors_group.draw(screen)
@@ -498,36 +534,46 @@ def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1):
     return points, hp, time_now - false_time == time + planet_time
 
 
-# Функция для инициализации меню
-def start_end_screen():
+# Настройки
+def settings(data):
     eng_rus = "qwertyuiop[]asdfghjkl;'zxcvbnm,.`", "йцукенгшщзхъфывапролджэячсмитьбюё"  # 33
     rus = True
-    n = ["NiGoDa", 3, 150, 1]  # В милисекундах [1800 = 3 минуты]
     running = True
-    result = ()
-    t_x, t_y = WIDTH // 9, HEIGHT // 9 * 7
     buttons = (
-        ("Лёгкая", (pygame.font.SysFont("None", 50).render("Лёгкая", True, pygame.Color("gray")),
-                    (240, 150))),
+        ("Сложная", (pygame.font.SysFont("None", 50).render("Сложная", True, pygame.Color("gray")),
+                     (560, 150))),
         ("Средняя", (pygame.font.SysFont("None", 50).render("Средняя", True, pygame.Color("gray")),
                      (380, 150))),
-        ("Сложная", (pygame.font.SysFont("None", 50).render("Сложная", True, pygame.Color("gray")),
-                     (560, 150))))
-    selected = buttons[1][1][0].get_rect(), buttons[1][1][1]
+        ("Лёгкая", (pygame.font.SysFont("None", 50).render("Лёгкая", True, pygame.Color("gray")),
+                    (240, 150))))
+    selected = buttons[data[3]][1][0].get_rect(), buttons[data[3]][1][1]
     name_btn = pygame.font.SysFont("None", 50).render("Имя:", True, pygame.Color("gray")), (143, 230)
+    mus_btns = (
+        ("<", (pygame.font.SysFont("None", 50).render("<<<", True, pygame.Color("gray")),
+               (400, 100))),
+        (">", (pygame.font.SysFont("None", 50).render(">>>", True, pygame.Color("gray")),
+               (500, 100))))
+    mode_btns = (
+        ("Campaign", (pygame.font.SysFont("None", 50).render(
+            "Campaign", True, pygame.Color("gray")), (300, 600))),
+        ("Supersonic", (pygame.font.SysFont("None", 50).render(
+            "Supersonic", True, pygame.Color("gray")), (300, 660))),
+        ("Space corridor", (pygame.font.SysFont("None", 50).render(
+            "Space corridor", True, pygame.Color("gray")), (300, 720))))
+    sel_mode = mode_btns[data[4]][1][0].get_rect(), mode_btns[data[4]][1][1]
+    musics = [i for i in os.listdir() if i[-4:] == ".mp3"]
     vvod = False
-    name = n[0]
+    name = data[0]
     while running:
-        pygame.display.set_caption("Меню игры, созданной для совместного проекта")
-        pause_menu("menu", n[3])
+        pause_menu("settings", data[3])
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    running = False
+                    return False, data
                 elif vvod:
                     if event.key == pygame.K_RETURN:
                         vvod = False
-                        n[0] = name
+                        data[0] = name
                     elif event.key == pygame.K_BACKSPACE:
                         name = name[:-1]
                     elif event.key == pygame.K_LALT and\
@@ -548,40 +594,44 @@ def start_end_screen():
                                 key = '"№;:?'['@#$^&'.index(key)]
                         name += key
                 elif event.key == pygame.K_SPACE:
-                    result = main(*n)
+                    return True, data
             elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Реакция на кнопки
                 for i, but in buttons:
                     if but[0].get_rect().move(but[1]).collidepoint(event.pos):
-                        n[3] = ("Сложная", "Средняя", "Лёгкая").index(i)
+                        data[3] = ("Сложная", "Средняя", "Лёгкая").index(i)
                         selected = but[0].get_rect(), but[1]
                 if name_btn[0].get_rect().move(name_btn[1]).collidepoint(event.pos):
                     vvod = True
                     name = ""
+                for i, but in mus_btns:
+                    if but[0].get_rect().move(but[1]).collidepoint(event.pos):
+                        mus = musics.index(music)
+                        mus += 1 if i == ">" else -1
+                        if mus == len(musics):
+                            mus = 0
+                        music_changer(musics[mus])
+                for i, but in mode_btns:
+                    if but[0].get_rect().move(but[1]).collidepoint(event.pos):
+                        data[4] = ("Campaign", "Supersonic", "Space corridor").index(i)
+                        sel_mode = but[0].get_rect(), but[1]
 
-        if result:
-            p, heal, win = result
-            if win:
-                itog = f"{name} доставил послание и по пути заработал {p} золота,"
-                if heal == n[1]:
-                    heal = "не угробя при этом корабль."
-                elif heal < n[1]:
-                    heal = f"потеряв при этом {n[1] - heal} прочности корабля."
-                else:
-                    heal = f"мистическим образом при этом нарастив {heal - n[1]} слоёв брони."
-            else:
-                itog, heal = f"{name} не выжил. На его обломках осталось {p} золота.", ""
-            menu.blit(pygame.font.SysFont("None", 40).render(
-                itog, True, pygame.Color("orange")), (t_x, t_y))
-            menu.blit(pygame.font.SysFont("None", 40).render(
-                heal, True, pygame.Color("orange")), (t_x, t_y + 45))
+        menu.blit(pygame.font.SysFont("None", 50).render(music, True, pygame.Color("gray")),
+                  (380, 50))
 
-        for i in buttons:
+        # Отрисовка кнопок
+        for i in (*buttons, *mus_btns, *mode_btns):
             menu.blit(*i[1])
         menu.blit(*name_btn)
         sel_p = pygame.Surface(selected[0].size)
         sel_p.fill((255, 0, 0))
         pygame.Surface.set_alpha(sel_p, 120)
         menu.blit(sel_p, selected[1])
+
+        sel_p = pygame.Surface(sel_mode[0].size)
+        sel_p.fill((255, 0, 0))
+        pygame.Surface.set_alpha(sel_p, 120)
+        menu.blit(sel_p, sel_mode[1])
         if vvod:
             sel_p = pygame.Surface(name_btn[0].get_rect().size)
             sel_p.fill((255, 0, 0))
@@ -594,9 +644,100 @@ def start_end_screen():
         pygame.display.flip()
         clock.tick(FPS)
 
+
+# Меню
+def start_screen(data):
+    pygame.display.set_caption("Меню игры, созданной для совместного проекта")
+    running = True
+    pause_menu("menu", data[3])
+    settings_btn = pygame.font.SysFont("None", 60).render("Настройки", True, pygame.Color("gray")),\
+        (WIDTH // 9 * 3.1, HEIGHT // 9 * 2.3)
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if settings_btn[0].get_rect().move(settings_btn[1]).collidepoint(event.pos):
+                    running, data = settings(data)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return False, ()
+                elif event.key == pygame.K_SPACE:
+                    return True, data
+        pause_menu("menu", data[3])
+        menu.blit(*settings_btn)
+        screen.blit(menu, (0, 0))
+        pygame.display.flip()
+        clock.tick(FPS)
+    return False, ()
+
+
+# Экран результатов
+def end_screen(data, result):
+    # data Ник, хп, время, сложность, режим
+    # result Очки, хп, прошёл ли
+    running = True
+    t_x, t_y = WIDTH // 18, HEIGHT // 18
+    score, heal, win = result
+    pause_menu("end", data[3])
+    if win:
+        itog1 = f"{data[0]} доставил послание и по пути заработал {score} золота,"
+        if heal == data[1]:
+            itog2 = "не угробя при этом корабль."
+        elif heal < data[1]:
+            itog2 = f"потеряв при этом {data[1] - heal} прочности корабля."
+        else:
+            itog2 = f"мистическим образом при этом нарастив {heal - data[1]} слоёв брони."
+    else:
+        itog1, itog2 = f"{data[0]} не выжил. На его обломках осталось {score} золота.", ""
+    menu.blit(pygame.font.SysFont("None", 40).render(
+        itog1, True, pygame.Color("orange")), (t_x, t_y))
+    menu.blit(pygame.font.SysFont("None", 40).render(
+        itog2, True, pygame.Color("orange")), (t_x, t_y + 45))
+
+    sl = ("Сложный", "Средний", "Лёгкий")[data[3]]
+    mode = ("Campaign", "Supersonic", "Space corridor")[data[4]]
+
+    with open("score.txt", "a", encoding="utf8") as file:
+        file.write(f"{data[0]}!{mode}!{sl}!{', '.join([str(i) for i in (score, heal, win)])}\n")
+    text_x = 10
+    text_y = 220
+    with open("score.txt", "r", encoding="utf8") as file:
+        for line in file.readlines()[::-1]:
+            for itog in line.strip("\n").split("!"):
+                menu.blit(pygame.font.SysFont("None", 25).render(
+                    itog, True, pygame.Color("white")), (text_x, text_y))
+                text_x += WIDTH // 4
+            text_x = 10
+            text_y += 30
+
+    screen.blit(menu, (0, 0))
+    pygame.display.flip()
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    return True
+                elif event.key == pygame.K_ESCAPE:
+                    return False
+
+
+# Запуск в локальном режиме, без выбора игры соответственно
+def run():
+    # Ник, хп, время, сложность, режим
+    data = ["NiGoDa", 3, 150, 1, 1]  # В милисекундах [1800 = 3 минуты]
+    running = True
+    while running:
+        running, data = start_screen(data)
+        data[4] = 1
+        result = main(*data[:-1])
+        if running:
+            running = end_screen(data, result)
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
     pygame.quit()
 
 
 if __name__ == '__main__':
-    start_end_screen()
-
+    run()
