@@ -28,6 +28,8 @@ points = 0  # Очки
 hp = 3  # Жизни [3]
 planet_time = 100  # В милисекундах [100]
 music = "music.mp3"
+sound_damage = pygame.mixer.Sound("sound_damage.mp3")
+pygame.mixer.Sound.set_volume(sound_damage, 0.2)
 
 # Группы спрайтов
 all_sprites = pygame.sprite.Group()
@@ -98,6 +100,8 @@ textures = {
     "gold": load_image("gold.png", -1),
     "ufo1": load_image("ufo_model_up.png", -1),
     "ufo2": load_image("ufo_model_up1.png", -1),
+    "pepe1": load_image("pepecopter1.jpg", -1),
+    "pepe2": load_image("pepecopter2.jpg", -1),
     "bonus": load_image("moon.png", -1),
     "bullet": bul_frames[0][0],
     "hpbar": load_image("hpbar.png", -1),
@@ -149,9 +153,13 @@ class Planet(pygame.sprite.Sprite):
 
 # Инициализация и обновление самого персонажа
 class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, pepe):
         super().__init__(player_group, all_sprites)
-        self.image = textures["ufo1"]
+        self.images = textures["ufo1"], textures["ufo2"]
+        if pepe:
+            self.images = pygame.transform.scale(textures["pepe1"], self.images[0].get_size()),\
+                          pygame.transform.scale(textures["pepe2"], self.images[1].get_size())
+        self.image = self.images[0]
         self.rect = self.image.get_rect().move(x - self.image.get_width() // 2,
                                                y - self.image.get_height() // 2)
         self.mask = pygame.mask.from_surface(self.image)
@@ -374,7 +382,7 @@ def pause_menu(which, sl):
 
 
 # Основная функция
-def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1, mode="Supersonic"):
+def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1):
     global points, hp, FPS
     points = 0
     name, hp = name, h
@@ -387,7 +395,7 @@ def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1, mode="Supersonic"):
         music_changer(music)
 
     # Игрок
-    player = Player(WIDTH // 2, HEIGHT // 2)
+    player = Player(WIDTH // 2, HEIGHT // 2, "pepe" in name)
     pygame.mouse.set_visible(False)
     cursor_gone = True
     immune = 0
@@ -476,6 +484,7 @@ def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1, mode="Supersonic"):
                     hp_changer(-1)
                     immune = 100 + sl * 20  # Время на передышку
                     AnimatedSprite(*player.rect.center, *damage_frames)
+                    sound_damage.play()
 
         # Отрисовка
         # Нажата ли пауза
@@ -506,8 +515,8 @@ def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1, mode="Supersonic"):
                 anime_group.update()
                 fon_group.update()
                 planet_group.update(time_now - false_time)
-                player.image = textures["ufo1"] if player.image == textures["ufo2"] else\
-                    textures["ufo2"]
+                player.image = player.images[0] if player.image == player.images[1] else\
+                    player.images[1]
             all_sprites.update()
             planet_group.draw(screen)
             meteors_group.draw(screen)
@@ -720,7 +729,7 @@ def run():
     while running:
         running, data = start_screen(data)
         data[4] = 1
-        result = main(*data)
+        result = main(*data[:-1])
         if running:
             running = end_screen(data, result)
 

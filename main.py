@@ -12,8 +12,12 @@ def run():
         if not running:
             break
 
+        # Музыка
+        if not Supersonic_mode.pygame.mixer.music.get_busy():
+            Supersonic_mode.music_changer(Supersonic_mode.music)
+
         if data[4] == 1:
-            result = Supersonic_mode.main(*data)
+            result = Supersonic_mode.main(*data[:-1])
         elif data[4] == 2:
             result = Kirams.leveling(abs(data[3] + 1), data[0])
         else:
@@ -21,7 +25,7 @@ def run():
             if result[2]:
                 dat_copy = data[:]
                 dat_copy[1] = 2 + result[1]
-                result, result1 = [*Supersonic_mode.main(*dat_copy)], result
+                result, result1 = [*Supersonic_mode.main(*dat_copy[:-1])], result
                 result[0] = result1[0] + result[0]
 
         running = Supersonic_mode.end_screen(data, result)

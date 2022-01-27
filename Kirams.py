@@ -11,6 +11,8 @@ clock = pygame.time.Clock()
 aster_gold = pygame.sprite.Group()
 if "data" in os.listdir():
     os.chdir("data")
+sound_damage = pygame.mixer.Sound("sound_damage.mp3")
+pygame.mixer.Sound.set_volume(sound_damage, 0.2)
 
 
 # Загрузка изображения
@@ -35,11 +37,11 @@ def load_image(name, color_key=None):
 def leveling(live, nam):
     # Создание карабля
     space_ship = pygame.sprite.Group()
-    if nam == 'pepe':
-        nazvanie = 'pepecopter.jpg'
-        nazvanie1 = 'pepecopter1.jpg'
-        nazvanieup = 'pepecopter.jpg'
-        nazvaniedoun = 'pepecopter.jpg'
+    if 'pepe' in nam:
+        nazvanie = 'pepecopter1.jpg'
+        nazvanie1 = 'pepecopter2.jpg'
+        nazvanieup = 'pepecopter2.jpg'
+        nazvaniedoun = 'pepecopter2.jpg'
     else:
         nazvanie = 'ufo_model.png'
         nazvanie1 = 'ufo_model1.png'
@@ -419,6 +421,7 @@ def leveling(live, nam):
                 live -= 1
                 ne_damage = True
                 time_damage = 0
+                sound_damage.play()
 
             # 1,5 секунд неуязвимости
             if ne_damage:
@@ -433,7 +436,6 @@ def leveling(live, nam):
                 all_sprites = pygame.sprite.Group()
 
             # уменьшение жизни и смерть
-
             if live <= 0:
                 job = False
                 ter = True
@@ -449,7 +451,6 @@ def leveling(live, nam):
                 ter = False
 
             # отрисовка
-
             stars.draw(screen)
             aster.draw(screen)
             winner.draw(screen)
@@ -486,8 +487,8 @@ def leveling(live, nam):
 
     lack.close()
     # запись результатов
-    return killed_aster, live, not ter
     # Очки, хп, прошёл ли
+    return killed_aster, live, not ter
 
 
 def run():
