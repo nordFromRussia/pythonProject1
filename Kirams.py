@@ -462,8 +462,8 @@ def leveling(live, nam):
             aster_gold.draw(screen)
             pygame.font.init()
             my_font = pygame.font.SysFont('None', 80)
-            player_name = my_font.render(str(nam), True, (0, 191, 255))
-            screen.blit(player_name, (0, 0))
+            screen.blit(pygame.font.SysFont('cambriamath', 48).render(
+                nam, True, (0, 191, 255)), (0, 0))
 
             # отрисовка жизней
             for i in range(live):
