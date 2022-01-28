@@ -44,13 +44,17 @@ fon_group = pygame.sprite.Group()
 planet_group = pygame.sprite.Group()
 
 
+def terminate():
+    sys.exit()
+
+
 # Загрузка изображений
 def load_image(name, colorkey=None):
     fullname = os.path.join(name)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
-        sys.exit()
+        terminate()
     image = pygame.image.load(fullname)
     if colorkey is not None:
         image = image.convert()
@@ -301,7 +305,7 @@ def create_fon():
 # Создание экранов для паузы и меню
 def pause_menu(which, sl):
     global menu
-    font = pygame.font.SysFont("None", 40)
+    font = pygame.font.SysFont("centuryschoolbook", 34)
     if sl == 0:
         menu_slp.fill((110, 90, 90))
         menu.fill((5, 0, 0))
@@ -338,44 +342,44 @@ def pause_menu(which, sl):
                "Бонусные метеориты имеют меньшую плотность и ломаются легче.")
         text_x, text_y = 10, 10
         for line in law[:4]:
-            menu.blit(pygame.font.SysFont("None", 25).render(line, True, pygame.Color("white")),
-                      (text_x, text_y))
+            menu.blit(pygame.font.SysFont("cambriamath", 19).render(
+                line, True, pygame.Color("white")), (text_x, text_y))
             text_y += 30
         text_y = HEIGHT - 120
         for line in law[4:]:
-            menu.blit(pygame.font.SysFont("None", 25).render(line, True, pygame.Color("white")),
-                      (text_x, text_y))
+            menu.blit(pygame.font.SysFont("cambriamath", 19).render(
+                line, True, pygame.Color("white")), (text_x, text_y))
             text_y += 30
     elif which == "settings":
-        menu.blit(pygame.font.SysFont("None", 50).render(
+        menu.blit(pygame.font.SysFont("cambriamath", 42).render(
             "Сложность:", True, pygame.Color("gray")), (20, 150))
-        menu.blit(pygame.font.SysFont("None", 50).render(
+        menu.blit(pygame.font.SysFont("cambriamath", 42).render(
             "Режим игры:", True, pygame.Color("gray")), (20, HEIGHT - 400))
-        menu.blit(pygame.font.SysFont("None", 50).render(
-            "Музыка:", True, pygame.Color("gray")), (75, 50))
+        menu.blit(pygame.font.SysFont("cambriamath", 42).render(
+            "Музыка:", True, pygame.Color("gray")), (78, 50))
         text = ("Настройки", "",
                 'Чтобы ввести имя - нажми на "Имя"',
                 "Чтобы сохранить имя - нажми пробел",
                 "Чтобы выбрать музыку, она должна быть в data")
     else:
         text = ()
-        menu.blit(pygame.font.SysFont("None", 25).render(
-            "Результаты прошлых послов:", True, pygame.Color("white")), (20, 150))
+        menu.blit(pygame.font.SysFont("cambriamath", 19).render(
+            "Результаты прошлых послов:", True, pygame.Color("white")), (10, 150))
         law = ("Имя", "Режим", "Сложность", "Очки, прочность, долетел")
         text_x, text_y = 10, 190
         for i in law:
-            menu.blit(pygame.font.SysFont("None", 25).render(
+            menu.blit(pygame.font.SysFont("cambriamath", 19).render(
                 i, True, pygame.Color("white")), (text_x, text_y))
             text_x += WIDTH // 4
 
     text_x, text_y = WIDTH // 9 * 2, HEIGHT // 9 * 3
     for line in text:
         if line == text[0]:
-            menu.blit(pygame.font.SysFont("None", 60).render(line, True, (180, 60, 60)),
+            menu.blit(pygame.font.SysFont("centuryschoolbook", 52).render(line, True, (180, 60, 60)),
                       (WIDTH // 9 * 3.5, text_y))
         elif line == text[-1]:
-            menu.blit(pygame.font.SysFont("None", 25).render(line, True, (180, 60, 60)),
-                      (WIDTH // 9 * 2, text_y))
+            menu.blit(pygame.font.SysFont("centuryschoolbook", 16).render(line, True, (180, 60, 60)),
+                      (WIDTH // 9 * 2, text_y + 10))
         else:
             menu.blit(font.render(line, True, (180, 60, 60)), (text_x, text_y))
         text_y += 40
@@ -503,8 +507,9 @@ def main(name="NiGoDa", h=3, time=-1 - planet_time, sl=1):
 
             # Интерфейс
             screen.blit(textures["hpbar"], (0, 0))
-            screen.blit(pygame.font.SysFont('None', 80).render(name, True, (0, 191, 255)), (0, 0))
-            screen.blit(pygame.font.SysFont('None', 40).render(
+            screen.blit(pygame.font.SysFont('cambriamath', 48).render(
+                name, True, (0, 191, 255)), (0, 0))
+            screen.blit(pygame.font.SysFont('cambriamath', 32).render(
                 f"Время: {round((time_now - false_time) / 10)}", True, (100, 191, 255)),
                 (0, 90))
             for i in range(hp):
@@ -540,25 +545,26 @@ def settings(data):
     rus = True
     running = True
     buttons = (
-        ("Сложная", (pygame.font.SysFont("None", 50).render("Сложная", True, pygame.Color("gray")),
-                     (560, 150))),
-        ("Средняя", (pygame.font.SysFont("None", 50).render("Средняя", True, pygame.Color("gray")),
-                     (380, 150))),
-        ("Лёгкая", (pygame.font.SysFont("None", 50).render("Лёгкая", True, pygame.Color("gray")),
-                    (240, 150))))
+        ("Сложная", (pygame.font.SysFont("cambriamath", 42).render(
+            "Сложная", True, pygame.Color("gray")), (580, 150))),
+        ("Средняя", (pygame.font.SysFont("cambriamath", 42).render(
+            "Средняя", True, pygame.Color("gray")), (408, 150))),
+        ("Лёгкая", (pygame.font.SysFont("cambriamath", 42).render(
+            "Лёгкая", True, pygame.Color("gray")), (260, 150))))
     selected = buttons[data[3]][1][0].get_rect(), buttons[data[3]][1][1]
-    name_btn = pygame.font.SysFont("None", 50).render("Имя:", True, pygame.Color("gray")), (143, 230)
+    name_btn = pygame.font.SysFont("cambriamath", 42).render(
+        "Имя:", True, pygame.Color("gray")), (148, 230)
     mus_btns = (
         ("<", (pygame.font.SysFont("None", 50).render("<<<", True, pygame.Color("gray")),
                (400, 100))),
         (">", (pygame.font.SysFont("None", 50).render(">>>", True, pygame.Color("gray")),
                (500, 100))))
     mode_btns = (
-        ("Campaign", (pygame.font.SysFont("None", 50).render(
+        ("Campaign", (pygame.font.SysFont("cambriamath", 42).render(
             "Campaign", True, pygame.Color("gray")), (300, 600))),
-        ("Supersonic", (pygame.font.SysFont("None", 50).render(
+        ("Supersonic", (pygame.font.SysFont("cambriamath", 42).render(
             "Supersonic", True, pygame.Color("gray")), (300, 660))),
-        ("Space corridor", (pygame.font.SysFont("None", 50).render(
+        ("Space corridor", (pygame.font.SysFont("cambriamath", 42).render(
             "Space corridor", True, pygame.Color("gray")), (300, 720))))
     sel_mode = mode_btns[data[4]][1][0].get_rect(), mode_btns[data[4]][1][1]
     musics = [i for i in os.listdir() if i[-4:] == ".mp3"]
@@ -569,7 +575,7 @@ def settings(data):
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return False, data
+                    terminate()
                 elif vvod:
                     if event.key == pygame.K_RETURN:
                         vvod = False
@@ -616,7 +622,7 @@ def settings(data):
                         data[4] = ("Campaign", "Supersonic", "Space corridor").index(i)
                         sel_mode = but[0].get_rect(), but[1]
 
-        menu.blit(pygame.font.SysFont("None", 50).render(music, True, pygame.Color("gray")),
+        menu.blit(pygame.font.SysFont("cambriamath", 42).render(music, True, pygame.Color("gray")),
                   (380, 50))
 
         # Отрисовка кнопок
@@ -637,8 +643,8 @@ def settings(data):
             sel_p.fill((255, 0, 0))
             pygame.Surface.set_alpha(sel_p, 120)
             menu.blit(sel_p, name_btn[1])
-        menu.blit(pygame.font.SysFont("None", 50).render(name, True, pygame.Color("gray")),
-                  (225, 230))
+        menu.blit(pygame.font.SysFont("cambriamath", 42).render(name, True, pygame.Color("gray")),
+                  (260, 230))
 
         screen.blit(menu, (0, 0))
         pygame.display.flip()
@@ -650,8 +656,8 @@ def start_screen(data):
     pygame.display.set_caption("Меню игры, созданной для совместного проекта")
     running = True
     pause_menu("menu", data[3])
-    settings_btn = pygame.font.SysFont("None", 60).render("Настройки", True, pygame.Color("gray")),\
-        (WIDTH // 9 * 3.1, HEIGHT // 9 * 2.3)
+    settings_btn = pygame.font.SysFont("cambriamath", 52).render(
+        "Настройки", True, pygame.Color("gray")), (WIDTH // 9 * 3, HEIGHT // 9 * 2)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -659,7 +665,7 @@ def start_screen(data):
                     running, data = settings(data)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return False, ()
+                    terminate()
                 elif event.key == pygame.K_SPACE:
                     return True, data
         pause_menu("menu", data[3])
@@ -667,7 +673,7 @@ def start_screen(data):
         screen.blit(menu, (0, 0))
         pygame.display.flip()
         clock.tick(FPS)
-    return False, ()
+    terminate()
 
 
 # Экран результатов
@@ -675,7 +681,7 @@ def end_screen(data, result):
     # data Ник, хп, время, сложность, режим
     # result Очки, хп, прошёл ли
     running = True
-    t_x, t_y = WIDTH // 18, HEIGHT // 18
+    t_x, t_y = WIDTH // 30, HEIGHT // 30
     score, heal, win = result
     pause_menu("end", data[3])
     if win:
@@ -688,9 +694,9 @@ def end_screen(data, result):
             itog2 = f"мистическим образом при этом нарастив {heal - data[1]} слоёв брони."
     else:
         itog1, itog2 = f"{data[0]} не выжил. На его обломках осталось {score} золота.", ""
-    menu.blit(pygame.font.SysFont("None", 40).render(
+    menu.blit(pygame.font.SysFont("centuryschoolbook", 32).render(
         itog1, True, pygame.Color("orange")), (t_x, t_y))
-    menu.blit(pygame.font.SysFont("None", 40).render(
+    menu.blit(pygame.font.SysFont("centuryschoolbook", 32).render(
         itog2, True, pygame.Color("orange")), (t_x, t_y + 45))
 
     sl = ("Сложный", "Средний", "Лёгкий")[data[3]]
@@ -703,7 +709,7 @@ def end_screen(data, result):
     with open("score.txt", "r", encoding="utf8") as file:
         for line in file.readlines()[::-1]:
             for itog in line.strip("\n").split("!"):
-                menu.blit(pygame.font.SysFont("None", 25).render(
+                menu.blit(pygame.font.SysFont("cambriamath", 19).render(
                     itog, True, pygame.Color("white")), (text_x, text_y))
                 text_x += WIDTH // 4
             text_x = 10
@@ -718,7 +724,7 @@ def end_screen(data, result):
                 if event.key == pygame.K_SPACE:
                     return True
                 elif event.key == pygame.K_ESCAPE:
-                    return False
+                    terminate()
 
 
 # Запуск в локальном режиме, без выбора игры соответственно

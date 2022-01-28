@@ -10,7 +10,7 @@ def run():
     while running:
         running, data = Supersonic_mode.start_screen(data)
         if not running:
-            break
+            Supersonic_mode.terminate()
 
         # Музыка
         if not Supersonic_mode.pygame.mixer.music.get_busy():
